@@ -35,36 +35,29 @@ app.post("/create", async (req, res) => {
     });
 });
 
+// View All
 
+app.get("/viewall", async (req, res) => {
+    let token = req.headers.token;
 
-//Sign Up
-
-app.post("/signIn",async(req,res)=>{
-    let input=req.body
-    let result=userModel.find({email:req.body.email}).then((items)=>{
-        if (items.length>0) {
-            const passwordValidatior=Bcrypt.compareSync(req.body.password,items[0].password)
-            if (passwordValidatior) {
-                jwt.sign({email:req.body.email},"blogApp",{expiresIn:"1d"},(error,token)=>{
-                    if (error) {
-                        res.json({"status":"error","error":error})
-                    } else {
-                        res.json({"status":"success","token":token,"userId":items[0]._id})
-                        
-                    }
-                })                
-            } else {
-                
-                res.json({"status":"Invalid password"}
-
-                )}
-            
-        } else {
-            res.json({"status":"Invalid email id"})
+    jwt.verify(token, "blogApp", async (error, decoded) => {
+        if (error) {
+            return res.json({ "status": "Invalid Authentication" });
         }
-    }).catch()
 
-})
+        if (decoded && decoded.email) {
+            try {
+                let posts = await postModel.find();
+                res.json(posts);
+            } catch (err) {
+                res.json({ "status": "error", "message": err.message });
+            }
+        } else {
+            res.json({ "status": "Invalid Authentication" });
+        }
+    });
+});
+
 
 
 
@@ -95,6 +88,6 @@ app.post("/signup",async(req,res)=>{
  )
    
 })
-app.listen(8999,()=>{
+app.listen(8844,()=>{
     console.log("Server started")
 })
